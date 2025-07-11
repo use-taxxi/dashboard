@@ -1,77 +1,4 @@
-import React from 'react';
-
-// Helper to calculate score and breakdown
-function calculateTaxHealthScore(answers) {
-  let score = 0;
-  const breakdown = [];
-
-  // Step 1: Business Structure & State Compliance (20 Points)
-  let step1 = 0;
-  if (answers.entityTypeSelected) { step1 += 5; breakdown.push({ label: 'Entity type selected', points: 5 }); }
-  else { breakdown.push({ label: 'Entity type selected', points: 0 }); }
-  if (answers.stateOfIncorporationProvided) { step1 += 5; breakdown.push({ label: 'State of incorporation provided', points: 5 }); }
-  else { breakdown.push({ label: 'State of incorporation provided', points: 0 }); }
-  if (answers.multiStateOpsDeclared) { step1 += 5; breakdown.push({ label: 'Multi-state operations declared & states listed', points: 5 }); }
-  else { breakdown.push({ label: 'Multi-state operations declared & states listed', points: 0 }); }
-  if (answers.registeredInRequiredStates) { step1 += 5; breakdown.push({ label: 'Registered in required states for tax purposes', points: 5 }); }
-  else { breakdown.push({ label: 'Registered in required states for tax purposes', points: 0 }); }
-  if (answers.multiStateOpsDeclared && !answers.registeredInRequiredStates) { step1 -= 5; breakdown.push({ label: 'Operating in multiple states but no registrations', points: -5 }); }
-  score += step1;
-
-  // Step 2: Financial & Payroll Setup (20 Points)
-  let step2 = 0;
-  if (answers.accountingSystemConnected) { step2 += 5; breakdown.push({ label: 'Accounting system connected', points: 5 }); }
-  else { breakdown.push({ label: 'Accounting system connected', points: 0 }); }
-  if (answers.payrollProviderConnected) { step2 += 5; breakdown.push({ label: 'Payroll provider connected or reports uploaded', points: 5 }); }
-  else { breakdown.push({ label: 'Payroll provider connected or reports uploaded', points: 0 }); }
-  if (answers.revenueExpenseDataProvided) { step2 += 5; breakdown.push({ label: 'Revenue & expense data provided', points: 5 }); }
-  else { breakdown.push({ label: 'Revenue & expense data provided', points: 0 }); }
-  if (answers.payrollTaxComplianceConfirmed) { step2 += 5; breakdown.push({ label: 'Payroll tax compliance confirmed', points: 5 }); }
-  else if (answers.payrollProviderConnected) { step2 += 5; breakdown.push({ label: 'Payroll exists but compliance is unclear', points: 5 }); }
-  else { breakdown.push({ label: 'Payroll tax compliance confirmed', points: 0 }); }
-  score += step2;
-
-  // Step 3: Tax & Compliance Risk Assessment (40 Points)
-  let step3 = 0;
-  if (answers.federalReturnFiled) { step3 += 10; breakdown.push({ label: 'Filed federal business tax return', points: 10 }); }
-  else if (answers.federalReturnRequired && !answers.federalReturnFiled && !answers.federalExtensionFiled) { step3 -= 10; breakdown.push({ label: 'Required but not filed & no extension', points: -10 }); }
-  else if (answers.federalExtensionFiled) { step3 += 5; breakdown.push({ label: 'Filed extension', points: 5 }); }
-  if (answers.stateReturnFiled) { step3 += 5; breakdown.push({ label: 'Filed state tax returns (if required)', points: 5 }); }
-  else if (answers.stateReturnRequired && !answers.stateReturnFiled) { step3 -= 5; breakdown.push({ label: 'Required but not filed (state)', points: -5 }); }
-  if (answers.estimatedPaymentsMade) { step3 += 5; breakdown.push({ label: 'Made estimated tax payments if taxes are due', points: 5 }); }
-  else if (answers.expectedToOwe && !answers.estimatedPaymentsMade) { step3 -= 5; breakdown.push({ label: 'Expected to owe but no payments made', points: -5 }); }
-  if (answers.noOutstandingNotices) { step3 += 5; breakdown.push({ label: 'No outstanding IRS/state tax notices', points: 5 }); }
-  else if (answers.unresolvedNoticesExist) { step3 -= 5; breakdown.push({ label: 'Unresolved notices exist', points: -5 }); }
-  if (answers.trackingRAndDCredits) { step3 += 5; breakdown.push({ label: 'Tracking R&D credits (if applicable)', points: 5 }); }
-  else if (answers.rAndDActivitiesExist && !answers.trackingRAndDCredits) { step3 -= 5; breakdown.push({ label: 'R&D activities exist but not claimed', points: -5 }); }
-  if (answers.trackingSalesTaxNexus) { step3 += 5; breakdown.push({ label: 'Tracking sales tax nexus (if applicable)', points: 5 }); }
-  score += step3;
-
-  // Clamp score between 0 and 80
-  score = Math.max(0, Math.min(score, 80));
-
-  // Map score to 0-100 scale
-  const normalizedScore = Math.round((score / 80) * 100);
-
-  // Status and description
-  let status = 'Good Tax Health';
-  let desc = 'Some risks but manageable';
-  if (normalizedScore >= 85) {
-    status = 'Excellent Tax Health';
-    desc = 'No significant risks detected.';
-  } else if (normalizedScore >= 70) {
-    status = 'Good Tax Health';
-    desc = 'Some risks but manageable.';
-  } else if (normalizedScore >= 50) {
-    status = 'Moderate Tax Health';
-    desc = 'Several risks need attention.';
-  } else {
-    status = 'Poor Tax Health';
-    desc = 'Significant risks detected. Immediate action recommended.';
-  }
-
-  return { normalizedScore, status, desc, breakdown };
-}
+import React, { useEffect, useState } from 'react';
 
 function Gauge({ score }) {
   // Simple SVG circular gauge
@@ -107,38 +34,46 @@ function Gauge({ score }) {
   );
 }
 
-// Example answers for demonstration (replace with real data/props)
-const exampleAnswers = {
-  entityTypeSelected: true,
-  stateOfIncorporationProvided: true,
-  multiStateOpsDeclared: true,
-  registeredInRequiredStates: false,
-  accountingSystemConnected: true,
-  payrollProviderConnected: true,
-  revenueExpenseDataProvided: true,
-  payrollTaxComplianceConfirmed: false,
-  federalReturnFiled: true,
-  federalReturnRequired: true,
-  federalExtensionFiled: false,
-  stateReturnFiled: true,
-  stateReturnRequired: true,
-  estimatedPaymentsMade: true,
-  expectedToOwe: false,
-  noOutstandingNotices: true,
-  unresolvedNoticesExist: false,
-  trackingRAndDCredits: false,
-  rAndDActivitiesExist: true,
-  trackingSalesTaxNexus: true,
-};
+export default function TaxHealthWidget() {
+  const [taxHealth, setTaxHealth] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function TaxHealthWidget({ data, answers = exampleAnswers }) {
-  // answers can be passed as a prop or use exampleAnswers
-  const { normalizedScore, status, desc, breakdown } = calculateTaxHealthScore(answers);
+  useEffect(() => {
+    setLoading(true);
+    // TODO: Replace '123' with the actual logged-in user's ID
+    fetch('http://localhost:5000/api/tax-health-answers?user_id=a1b2c3d4-e5f6-4a3b-8c7d-9e0f1a2b3c4d')
+      .then(res => {
+        if (!res.ok) throw new Error('No data');
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.tax_health) {
+          setTaxHealth(data.tax_health);
+        } else {
+          setTaxHealth(null);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setTaxHealth(null);
+        setLoading(false);
+        setError('No tax health data found. Please fill out the form to complete your information.');
+      });
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (!taxHealth) {
+    if (error) alert(error);
+    return null;
+  }
+
+  const { score, status, desc, breakdown } = taxHealth;
 
   return (
     <div style={{ flex: 1, background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 24, minWidth: 220, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Gauge score={normalizedScore} />
+        <Gauge score={score} />
         <div>
           <div style={{ fontWeight: 600, fontSize: 18 }}>Tax Health Score</div>
           <div style={{ fontWeight: 700, fontSize: 20, color: '#f5c542' }}>{status}</div>

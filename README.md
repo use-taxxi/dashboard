@@ -43,11 +43,8 @@ dashboard/
    ```
 2. Create a virtual environment and activate it:
    ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On Mac/Linux:
-   source venv/bin/activate
+   conda create --name dashboard python=3.10 nodejs
+   conda activate dashboard
    ```
 3. Install dependencies:
    ```bash
@@ -64,7 +61,7 @@ dashboard/
 
 1. Navigate to the frontend folder:
    ```bash
-   cd dashboard-frontend
+   cd frontend
    ```
 2. Install dependencies:
    ```bash
@@ -89,3 +86,16 @@ flask-cors
 - Ensure the Flask backend is running on port 5000 (default) and the React frontend on port 3000 (default).
 - The frontend fetches data from the backend at `http://localhost:5000/api/dashboard/summary`.
 - You may need to adjust CORS settings if accessing from a different host or port. 
+
+---
+
+## Tax Health Score Feature
+
+- The backend fetches the latest tax health answers for a user from Supabase (`tax_health_answers` table) and computes the tax health score, status, description, and breakdown.
+- The frontend widget (`TaxHealthWidget.js`) displays the score and breakdown based on the data returned by the backend (it does not recalculate the score).
+- Set your Supabase credentials in your environment:
+  ```
+  SUPABASE_URL=your_supabase_url
+  SUPABASE_KEY=your_supabase_key
+  ```
+- The frontend fetches data from `/api/tax-health-answers?user_id=USER_ID` and displays the computed tax health score and details.
