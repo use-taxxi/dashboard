@@ -99,3 +99,4 @@ flask-cors
   SUPABASE_KEY=your_supabase_key
   ```
 - The frontend fetches data from `/api/tax-health-answers?user_id=USER_ID` and displays the computed tax health score and details.
+

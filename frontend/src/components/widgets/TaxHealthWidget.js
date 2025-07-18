@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../Auth/AuthContext';
 
 function Gauge({ score }) {
   // Simple SVG circular gauge
@@ -82,6 +83,7 @@ const initialForm = {
 };
 
 export default function TaxHealthWidget() {
+  const { user } = useAuth();
   const [taxHealth, setTaxHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -91,8 +93,13 @@ export default function TaxHealthWidget() {
   const [submitMsg, setSubmitMsg] = useState('');
 
   useEffect(() => {
+    if (!user) return;
     setLoading(true);
-    fetch('http://localhost:5000/api/tax-health-answers?user_id=a1b2c3d4-e5f6-4a3b-8c7d-9e0f1a2b3c4')
+    fetch('http://localhost:5000/api/tax-health-answers', {
+      headers: {
+        'Authorization': `Bearer ${user.token}`
+      }
+    })
       .then(res => {
         if (!res.ok) throw new Error('No data');
         return res.json();
@@ -110,7 +117,7 @@ export default function TaxHealthWidget() {
         setLoading(false);
         setError('No tax health data found. Please fill out the form to complete your information.');
       });
-  }, []);
+  }, [user]);
 
   const handleFormChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -121,11 +128,13 @@ export default function TaxHealthWidget() {
     e.preventDefault();
     setSubmitting(true);
     setSubmitMsg('');
-    // TODO: Implement backend endpoint to accept this POST
     fetch('http://localhost:5000/api/tax-health-answers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: 'a1b2c3d4-e5f6-4a3b-8c7d-9e0f1a2b3c4d', ...form })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`
+      },
+      body: JSON.stringify(form)
     })
       .then(res => res.json())
       .then(data => {
@@ -139,6 +148,16 @@ export default function TaxHealthWidget() {
         setSubmitMsg('Submission failed.');
       });
   };
+
+  if (!user) {
+    return (
+      <div style={{ flex: 1, background: '#fffbe6', borderRadius: 16, boxShadow: '0 2px 8px #0001', padding: 24, minWidth: 220, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <div style={{ fontWeight: 600, fontSize: 16, color: '#b8860b', marginBottom: 8 }}>Please log in or sign up to view your tax health score.</div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) return <div>Loading...</div>;
   if (!taxHealth) {
